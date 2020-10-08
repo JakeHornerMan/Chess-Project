@@ -80,8 +80,7 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 		pieces = new JLabel( new ImageIcon("WhiteRook.png") );
 		panels = (JPanel)chessBoard.getComponent(7);
 	    panels.add(pieces);
-
-    for(int i=48;i < 56; i++){
+		for(int i=48;i < 56; i++){
        		pieces = new JLabel( new ImageIcon("BlackPawn.png") );
 			panels = (JPanel)chessBoard.getComponent(i);
 	        panels.add(pieces);
@@ -163,8 +162,6 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
         chessPiece.setLocation(e.getX() + xAdjustment, e.getY() + yAdjustment);
         chessPiece.setSize(chessPiece.getWidth(), chessPiece.getHeight());
         layeredPane.add(chessPiece, JLayeredPane.DRAG_LAYER);
-
-
     }
 
     public void mouseDragged(MouseEvent me) {
@@ -198,6 +195,16 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
     System.out.println("yMovement is:"+yMovement);
     System.out.println("Landing position"+"("+landingX+","+landingY+")");
     System.out.println("-------------------------------------------------");
+
+    /*else{
+      System.out.println("-------------------------------------------------");
+      System.out.println("This piece:"+pieceName);
+      System.out.println("Starting position:"+"("+startX+","+startY+")");
+      System.out.println("xMovement is:"+0);
+      System.out.println("yMovement is:"+0);
+      System.out.println("Landing position:"+" INVALID MOVE");
+      System.out.println("-------------------------------------------------");
+    }*/
 		/*
 			The only piece that has been enabled to move is a White Pawn...but we should really have this is a separate
 			method somewhere...how would this work.
@@ -210,38 +217,43 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 			demonstration purposes the Pawn here turns into a Queen.
 		*/
     if(pieceName.equals("BlackPawn")){
-      validMove = true;
-    }
-    if(pieceName.equals("WhiteQueen")){
-      validMove = true;
-    }
+      if(startY ==6){
+        if((startX == landingX)&&(((startY - landingY)==1)||(startY - landingY)==2)){
+          if(!piecePresent(e.getX(), e.getY())){
+            validMove = true;
 
-    if(pieceName.equals("WhiteRook")){
-      if(startX == (e.getX()/75)){
-        if(startY/(e.getY()/75)<8){
-          validMove = true;
-        }else if ((e.getY()/75)<startY){
-          validMove= true;
+          }else{
+            validMove = false;
+
+          }
+        //validMove = true;
         }
-      }
-      else if(startY == (e.getY()/75)){
-        if(startX/(e.getX()/75)<8){
-          validMove = true;
-        }else if ((e.getX()/75)<startX){
-          validMove= true;
+        else{
+          validMove = false;
+
         }
       }
       else{
-        validMove= false;
+        if((startX == landingX)&&(((startY - landingY)==1))){
+          if(!piecePresent(e.getX(), e.getY())){
+            validMove = true;
+
+          }else{
+            validMove = false;
+
+          }
+        }
+        else{
+          validMove = false;
+          
+        }
       }
     }
-
+//on page 11
 		if(pieceName.equals("WhitePawn")){
-			if(startY == 1)
-			{
-				if((startX == (e.getX()/75))&&((((e.getY()/75)-startY)==1)||((e.getY()/75)-startY)==2))
-				{
-					if((((e.getY()/75)-startY)==2)){
+			if(startY == 1){
+				if((startX == landingX)&&(((landingY-startY)==1)||(landingY-startY)==2)){
+					if(((landingY-startY)==2)){
 						if((!piecePresent(e.getX(), (e.getY())))&&(!piecePresent(e.getX(), (e.getY()+75)))){
 							validMove = true;
 						}
@@ -271,7 +283,7 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 					if((piecePresent(e.getX(), (e.getY())))&&((((newX == (startX+1)&&(startX+1<=7)))||((newX == (startX-1))&&(startX-1 >=0)))))
 					{
 						if(checkWhiteOponent(e.getX(), e.getY())){
-							validMove = false;
+							validMove = true;
 							if(startY == 6){
 								success = true;
 							}
@@ -282,7 +294,7 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 					}
 					else{
 						if(!piecePresent(e.getX(), (e.getY()))){
-							if((startX == (e.getX()/75))&&((e.getY()/75)-startY)==1){
+							if((startX == landingX)&&((e.getY()/75)-startY)==1){
 								if(startY == 6){
 									success = true;
 								}
@@ -305,7 +317,6 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 		if(!validMove){
 			int location=0;
 			if(startY ==0){
-
 				location = startX;
 			}
 			else{
@@ -318,7 +329,7 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 		}
 		else{
 			if(success){
-				int location = 56 + (e.getX()/75);
+				int location = 56 + landingX;
 				if (c instanceof JLabel){
 	            	Container parent = c.getParent();
 	            	parent.remove(0);
@@ -371,4 +382,4 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
         frame.setLocationRelativeTo( null );
         frame.setVisible(true);
      }
-}
+  }
