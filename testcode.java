@@ -26,3 +26,20 @@ if(pieceName.equals("WhiteRook")){
   System.out.println("yMovement is:"+yMovement);
   System.out.println("Landing position"+"("+landingX+","+landingY+")");
   System.out.println("-------------------------------------------------");
+
+  else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==1))){
+    if (piecePresent(e.getX(),e.getY())){
+      if(checkBlackOponent(e.getX(),e.getY())){
+        validMove = true;
+        if(landingY==0){
+          progression = true;
+        }
+      }
+      else{
+        validMove =false;
+      }
+    }
+    else{
+      validMove = false;
+    }
+  }
