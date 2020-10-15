@@ -43,3 +43,45 @@ if(pieceName.equals("WhiteRook")){
       validMove = false;
     }
   }
+
+  if(pieceName.equals("WhitePawn")){
+        if(startY == 1){
+          if((startY+1==landingY||startY+2==landingY)&&startX==landingX){
+            if(!piecePresent(e.getX(),e.getY())){
+              validMove = true;
+            }
+            else{
+              validMove = false;
+            }
+          }
+          else{
+            validMove = false;
+          }
+        }
+        else if(startY != 1){
+          if(startY+1==landingY&&startX==landingX){
+            if(!piecePresent(e.getX(),e.getY())){
+              validMove = true;
+            }
+            else{
+              validMove= false;
+            }
+          }
+          else{
+            validMove= false;
+          }
+        }
+        else if(startY+1==landingY&&(startX-1==landingX||startX+1==landingX)){
+          if(piecePresent(e.getX(),e.getY())){
+            if(checkWhiteOponent(e.getX(), e.getY())){
+              validMove = true;
+            }
+            else{
+              validMove = false;
+            }
+          }
+          else{
+            validMove = false;
+          }
+        }
+  	}
