@@ -1,18 +1,36 @@
-if(pieceName.equals("WhiteRook")){
-  if(startX == (e.getX()/75)){
-    if(startY/(e.getY()/75)<8){
-      validMove = true;
-    }else if ((e.getY()/75)<startY){
-      validMove= true;
-    }
-  }
-  else if(startY == (e.getY()/75)){
-    if(startX/(e.getX()/75)<8){
-      validMove = true;
-    }else if ((e.getX()/75)<startX){
-      validMove= true;
-    }
-  }
+else if (pieceName.contains("Rook")){
+	if(startX == landingX){
+		if(landingY != startY){
+			validMove = true;
+		}
+		else{
+			validMove= false;
+		}
+	}
+	else if (startY == landingY){
+		if(landingX != startX){
+			for (int i=1; i<=(landingX-startX); i++){
+				if(checkWhiteOponent((startX+i),(startY+i))==true){
+					if ((startX+i)==landingX&&(startY+i)==landingY){
+						validMove = true;
+					}else{
+						validMove = false;
+					}
+				}
+				else{
+					validMove = true;
+		}
+		}
+		}
+		else{
+		validMove = false;
+		}
+		}
+		}
+
+
+
+
 
   int landingX = (e.getX()/75);
   int landingY = (e.getY()/75);
