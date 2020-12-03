@@ -2,7 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import javax.swing.*;
-
+import javax.swing.JOptionPane;
 /*
 	This class can be used as a starting point for creating your Chess game project. The only piece that
 	has been coded is a white pawn...a lot done, more to do!
@@ -18,11 +18,28 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 	int startY;
 	int initialX;
 	int initialY;
+
+    private int landingX;
+    private int landingY;
+    private int xMovement;
+    private int yMovement;
+
+    private String pieceName;
+    private Boolean InTheWay;
+    private Boolean success;
+    private Boolean progression;
+    private int turnNum =1;
+    private Boolean whiteTurn;
+
+
+	Boolean validMove = false;
 	JPanel panels;
 	JLabel pieces;
 
+	int moves = 0;
 
     public ChessProject(){
+
         Dimension boardSize = new Dimension(600, 600);
 
         //  Use a Layered Pane for this application
@@ -109,6 +126,8 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 		pieces = new JLabel( new ImageIcon("BlackRook.png") );
 		panels = (JPanel)chessBoard.getComponent(63);
 	    panels.add(pieces);
+
+        JOptionPane.showMessageDialog( null, "White Turn First" );
     }
 
 	/*
@@ -141,30 +160,90 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 		return oponent;
 	}
 
-  private Boolean checkBlackOponent(int landingX,int landingY){
-    Boolean oponent;
-    Component c1 = chessBoard.findComponentAt(landingX,landingY);
-    JLabel awaitingPiece = (JLabel)c1;
-    String tmp1 = awaitingPiece.getIcon().toString();
-    if(((tmp1.contains("White")))){
-      oponent = true;
+    private Boolean checkBlackOponent(int landingX,int landingY){
+        Boolean oponent;
+        Component c1 = chessBoard.findComponentAt(landingX,landingY);
+        JLabel awaitingPiece = (JLabel)c1;
+        String tmp1 = awaitingPiece.getIcon().toString();
+
+        if (((tmp1.contains("White")))) {
+            oponent = true;
+        } else {
+            oponent = false;
+        }
+        return oponent;
     }
-    else{
-      oponent = false;
+
+    private Boolean kingCheckKing(int landingX, int landingY){
+	    Boolean oponent;
+        Component c1 = chessBoard.findComponentAt(landingX, landingY);
+        if(c1==null){
+            oponent = false;
+        }
+
+        JLabel awaitingPiece = (JLabel)c1;
+        String tmp1 = awaitingPiece.getIcon().toString();
+        if(((tmp1.contains("King")))){
+            oponent = true;
+        }
+        else{
+            oponent = false;
+        }
+
+        return oponent;
     }
-    return oponent;
-  }
+
+    private Boolean WhiteKing(int landingX, int landingY){
+        Boolean oponent;
+        Component c1 = chessBoard.findComponentAt(landingX, landingY);
+        if(c1==null){
+            oponent = false;
+        }
+
+        JLabel awaitingPiece = (JLabel)c1;
+        String tmp1 = awaitingPiece.getIcon().toString();
+        if(((tmp1.contains("WhiteKing")))){
+            oponent = true;
+        }
+        else{
+            oponent = false;
+        }
+
+        return oponent;
+    }
+    private Boolean BlackKing(int landingX, int landingY){
+        Boolean oponent;
+        Component c1 = chessBoard.findComponentAt(landingX, landingY);
+        if(c1==null){
+            oponent = false;
+        }
+
+        JLabel awaitingPiece = (JLabel)c1;
+        String tmp1 = awaitingPiece.getIcon().toString();
+        if(((tmp1.contains("BlackKing")))){
+            oponent = true;
+        }
+        else{
+            oponent = false;
+        }
+
+        return oponent;
+    }
 
 	/*
 		This method is called when we press the Mouse. So we need to find out what piece we have
 		selected. We may also not have selected a piece!
 	*/
     public void mousePressed(MouseEvent e){
+        if(SwingUtilities.isRightMouseButton(e)){
+            validMove=false;
+        }
+
         chessPiece = null;
         Component c =  chessBoard.findComponentAt(e.getX(), e.getY());
-        if (c instanceof JPanel)
-			return;
-
+        if (c instanceof JPanel) {
+            return;
+        }
         Point parentLocation = c.getParent().getLocation();
         xAdjustment = parentLocation.x - e.getX();
         yAdjustment = parentLocation.y - e.getY();
@@ -180,240 +259,322 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
 
     public void mouseDragged(MouseEvent me) {
         if (chessPiece == null) return;
-         chessPiece.setLocation(me.getX() + xAdjustment, me.getY() + yAdjustment);
-     }
+        chessPiece.setLocation(me.getX() + xAdjustment, me.getY() + yAdjustment);
+    }
 
  	/*
 		This method is used when the Mouse is released...we need to make sure the move was valid before
 		putting the piece back on the board.
 	*/
     public void mouseReleased(MouseEvent e) {
+
         if(chessPiece == null) return;
 
         chessPiece.setVisible(false);
-		Boolean success =false;
 
-    Boolean progression =false;
+        Component c =  chessBoard.findComponentAt(e.getX(), e.getY());
+        String tmp = chessPiece.getIcon().toString();
+        pieceName = tmp.substring(0, (tmp.length()-4));
 
-    Boolean InTheWay = false;
-
-    Component c =  chessBoard.findComponentAt(e.getX(), e.getY());
-		String tmp = chessPiece.getIcon().toString();
-		String pieceName = tmp.substring(0, (tmp.length()-4));
-		Boolean validMove = false;
-
-    int landingX = (e.getX()/75);
-    int landingY = (e.getY()/75);
-    int xMovement = Math.abs((e.getX()/75)-startX);
-    int yMovement = Math.abs((e.getY()/75)-startY);
-
-    System.out.println("-------------------------------------------------");
-    System.out.println("This piece:"+pieceName);
-    System.out.println("Starting position:"+"("+startX+","+startY+")");
-    System.out.println("xMovement is:"+xMovement);
-    System.out.println("yMovement is:"+yMovement);
-    System.out.println("Landing position"+"("+landingX+","+landingY+")");
-    System.out.println("-------------------------------------------------");
-
-		/*
-			The only piece that has been enabled to move is a White Pawn...but we should really have this is a separate
-			method somewhere...how would this work.
-
-			So a Pawn is able to move two squares forward one its first go but only one square after that.
-			The Pawn is the only piece that cannot move backwards in chess...so be careful when committing
-			a pawn forward. A Pawn is able to take any of the opponent’s pieces but they have to be one
-			square forward and one square over, i.e. in a diagonal direction from the Pawns original position.
-			If a Pawn makes it to the top of the other side, the Pawn can turn into any other piece, for
-			demonstration purposes the Pawn here turns into a Queen.
-		*/
-    if(pieceName.contains("Knight")){
-      if(startX +2==landingX||startX -2==landingX){
-        if(startY +1==landingY||startY -1==landingY){
-          if(!piecePresent(e.getX(),e.getY())){
-            validMove= true;
-          }
-          else if(piecePresent(e.getX(),e.getY())){
-            if(pieceName.contains("White")){
-              if(checkWhiteOponent(e.getX(),e.getY())==true){
-                validMove = true;
-              }else{
-                validMove = false;
-              }
-            }
-            if(pieceName.contains("Black")){
-              if(checkBlackOponent(e.getX(),e.getY())==true){
-                validMove = true;
-              }else{
-                validMove = false;
-              }
-            }
-          }
+        if (turnNum % 2 == 0) {
+            whiteTurn = false;
         }
-      }
-      else if(startY +2==landingY||startY -2==landingY){
-        if(startX +1==landingX||startX -1==landingX){
-          if(!piecePresent(e.getX(),e.getY())){
-            validMove= true;
-          }
-          else if(piecePresent(e.getX(),e.getY())){
-            if(pieceName.contains("White")){
-              if(checkWhiteOponent(e.getX(),e.getY())==true){
-                validMove = true;
-              }else{
-                validMove = false;
-              }
-            }
-            if(pieceName.contains("Black")){
-              if(checkBlackOponent(e.getX(),e.getY())==true){
-                validMove = true;
-              }else{
-                validMove = false;
-              }
-            }
-          }
+        else {
+            whiteTurn = true;
         }
-      }
-      else{
-          validMove= false;
-      }
-    }
-    //end Knight both colors
 
-    else if (pieceName.contains("Bishop")){
-        if(Math.abs(startX-landingX)==Math.abs(startY-landingY)){
-            if ((startX-landingX)<0&&(startY-landingY)<0){
-                for(int i= 0; i<xMovement;i++){
-                    if(piecePresent(((startX+i)*75),((startY+i)*75))){
-                        InTheWay = true;
-                    }
-                }
+        validMove = false;
+        success =false;
+        progression =false;
+        InTheWay = false;
+
+        landingX = (e.getX()/75);
+        landingY = (e.getY()/75);
+        xMovement = Math.abs((e.getX()/75)-startX);
+        yMovement = Math.abs((e.getY()/75)-startY);
+
+        if(whiteTurn == true && pieceName.contains("White")) {
+            switch (pieceName) {
+                case "WhitePawn":
+                    moveWPawn();
+                    turnNum++;
+                    break;
+                case "WhiteKnight":
+                    moveKnight();
+                    turnNum++;
+                    break;
+                case "WhiteBishop":
+                    moveBishop();
+                    turnNum++;
+                    break;
+                case "WhiteRook":
+                    moveRook();
+                    turnNum++;
+                    break;
+                case "WhiteQueen":
+                    moveQueen();
+                    turnNum++;
+                    break;
+                case "WhiteKing":
+                    moveKing();
+                    turnNum++;
+                    break;
+                default:
+                    validMove = false;
+                    break;
             }
-            else if ((startX-landingX)<0&&(startY-landingY)>0){
-                for(int i= 0; i<xMovement;i++){
-                    if(piecePresent(((startX+i)*75),((startY-i)*75))){
-                        InTheWay = true;
-                    }
-                }
-            }
-            else if ((startX-landingX)>0&&(startY-landingY)>0){
-                for(int i= 0; i<xMovement;i++){
-                    if(piecePresent(((startX-i)*75),((startY-i)*75))){
-                        InTheWay = true;
-                    }
-                }
-            }
-            else if ((startX-landingX)>0&&(startY-landingY)<0){
-                for(int i= 0; i<xMovement;i++){
-                    if(piecePresent(((startX-i)*75),((startY+i)*75))){
-                        InTheWay = true;
-                    }
-                }
-            }
-            if (InTheWay==true){
-                validMove=false;
-            }
-            else if (InTheWay==false){
-                if(piecePresent(e.getX(),e.getY())){
-                    if(pieceName.contains("White")){
-                        if(checkWhiteOponent(e.getX(),e.getY())){
-                            validMove=true;
-                        }
-                        else{
-                            validMove=false;
-                        }
-                    }
-                    else if(pieceName.contains("Black")){
-                        if(checkBlackOponent(e.getX(),e.getY())){
-                            validMove=true;
-                        }
-                        else{
-                            validMove=false;
-                        }
-                    }
-                }
-                else{
-                    validMove=true;
-                }
+        }else if (whiteTurn == true && pieceName.contains("Black")){
+            validMove=false;
+        }
+        else if (whiteTurn == false && pieceName.contains("Black")){
+            switch (pieceName) {
+                case "BlackPawn":
+                    moveBPawn();
+                    turnNum++;
+                    break;
+                case "BlackKnight":
+                    moveKnight();
+                    turnNum++;
+                    break;
+                case "BlackBishop":
+                    moveBishop();
+                    turnNum++;
+                    break;
+                case "BlackRook":
+                    moveRook();
+                    turnNum++;
+                    break;
+                case "BlackQueen":
+                    moveQueen();
+                    turnNum++;
+                    break;
+                case "BlackKing":
+                    moveKing();
+                    turnNum++;
+                    break;
+                default:
+                    validMove = false;
+                    break;
             }
         }
-    }
-    //end Bishop both colors
+        else if (whiteTurn == false && pieceName.contains("White")){
+            validMove=false;
+        }
 
-    else if (pieceName.contains("Rook")){
-        if(Math.abs(startX-landingX)!=0 && Math.abs(startY-landingY)==0||
-        Math.abs(startX-landingX)==0 && Math.abs(startY-landingY)!=0){
-            if(Math.abs(startX-landingX)!=0){
-                if(startX-landingX>0){
-                    for (int i =0;i<Math.abs(landingX-startX);i++){
-                        if(piecePresent((startX-i)*75,(startY)*75)){
-                            InTheWay = true;
-                        }
-                    }
-                }
-                else if(startX-landingX<0){
-                    for (int i =0;i<Math.abs(landingX-startX);i++){
-                        if(piecePresent((startX+i)*75,(startY)*75)){
-                            InTheWay = true;
-                        }
-                    }
-                }
+        if(landingX==startX&&landingY==startY){
+            validMove=false;
+            turnNum--;
+        }
+
+        if(!validMove){
+            int location=0;
+            if(startY ==0){
+                location = startX;
             }
-            else if (Math.abs(startY-landingY)!=0){
-                if(startY-landingY>0){
-                    for (int i =0;i<Math.abs(landingY-startY);i++){
-                        if(piecePresent((startX)*75,(startY-i)*75)){
-                            InTheWay = true;
-                        }
-                    }
-                }
-                else if(startY-landingY<0){
-                    for (int i =0;i<Math.abs(landingY-startY);i++){
-                        if(piecePresent((startX)*75,(startY+i)*75)){
-                            InTheWay = true;
-                        }
-                    }
-                }
+            else{
+                location  = (startY*8)+startX;
             }
-            if(InTheWay==true){
-                validMove = false;
+            String pieceLocation = pieceName+".png";
+            pieces = new JLabel( new ImageIcon(pieceLocation) );
+            panels = (JPanel)chessBoard.getComponent(location);
+            panels.add(pieces);
+        }
+        else{
+            if(progression){
+                int location = 0 + (e.getX()/75);
+                if (c instanceof JLabel){
+                Container parent = c.getParent();
+                parent.remove(0);
+                pieces = new JLabel(new ImageIcon("BlackQueen.png"));
+                parent = (JPanel)chessBoard.getComponent(location);
+                parent.add(pieces);
             }
-            else if (InTheWay==false){
-                if(piecePresent(e.getX(),e.getY())){
-                    if (pieceName.contains("White")){
-                        if(checkWhiteOponent(e.getX(),e.getY())){
-                            validMove = true;
-                        }
-                        else{
-                            validMove = false;
-                        }
-                    }
-                    else if (pieceName.contains("Black")){
-                        if(checkBlackOponent(e.getX(),e.getY())){
-                            validMove = true;
-                        }
-                        else{
-                            validMove = false;
-                        }
-                    }
-                }
-                else{
-                    validMove = true;
-                }
+            else{
+                Container parent = (Container)c;
+                pieces = new JLabel( new ImageIcon("BlackQueen.png") );
+                parent = (JPanel)chessBoard.getComponent(location);
+                parent.add(pieces);
+            }
+        }
+        else if(success){
+            int location = 56 + (e.getX()/75);
+            if (c instanceof JLabel){
+                Container parent = c.getParent();
+                parent.remove(0);
+                pieces = new JLabel( new ImageIcon("WhiteQueen.png") );
+                parent = (JPanel)chessBoard.getComponent(location);
+                parent.add(pieces);
+            }
+            else{
+                Container parent = (Container)c;
+                pieces = new JLabel( new ImageIcon("WhiteQueen.png") );
+                parent = (JPanel)chessBoard.getComponent(location);
+                parent.add(pieces);
             }
         }
         else{
-            validMove = false;
-
-
-
+            if (c instanceof JLabel){
+                Container parent = c.getParent();
+                parent.remove(0);
+                parent.add( chessPiece );
+            }
+            else {
+                Container parent = (Container)c;
+                parent.add( chessPiece );
+            }
+            chessPiece.setVisible(true);
+            }
         }
-    }
-    //end rook both colors*/
+		//loggercode
+        if (validMove== true) {
+            System.out.println("-------------------------------------------------");
+            System.out.println("This piece:" + pieceName);
+            System.out.println("Starting position:" + "(" + startX + "," + startY + ")");
+            System.out.println("xMovement is:" + xMovement);
+            System.out.println("yMovement is:" + yMovement);
+            System.out.println("Landing position" + "(" + landingX + "," + landingY + ")");
+            System.out.println("-------------------------------------------------");
+        }
 
-    else if(pieceName.contains("Queen")){
+
+    }
+
+    //WhitePawn Code
+    public boolean moveWPawn(){
+        if(startY ==1){
+            if((startX == landingX)&&(((startY - landingY)==-1)||(startY - landingY)==-2)){
+                if(!piecePresent(landingX*75, landingY*75)){
+                    validMove = true;
+                }
+                else{
+                    validMove = false;
+                }
+            }
+            else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==-1))){
+                if (piecePresent(landingX*75,landingY*75)){
+                    if(checkWhiteOponent(landingX*75,landingY*75)==true){
+                        if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                            JOptionPane.showMessageDialog( null, "White Wins!" );
+                        }
+                        validMove = true;
+                    }
+                    else{
+                        validMove =false;
+                    }
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==-1))){
+            if (piecePresent(landingX*75,landingY*75)){
+                if(checkWhiteOponent(landingX*75,landingY*75)==true){
+                    if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                        JOptionPane.showMessageDialog( null, "White Wins!" );
+                    }
+                    validMove = true;
+                    if(landingY==7){
+                        success = true;
+                    }
+                }
+                else{
+                    validMove =false;
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        else{
+            if((startX == landingX)&&(((startY - landingY)==-1))){
+                if(!piecePresent(landingX*75, landingY*75)){
+                    validMove = true;
+                    if(landingY==7){
+                        success = true;
+                    }
+                }
+                else{
+                    validMove = false;
+
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        return validMove;
+    }
+    //BlackPawn Code
+    public boolean moveBPawn(){
+        if(startY ==6){
+            if((startX == landingX)&&(((startY - landingY)==1)||(startY - landingY)==2)){
+                if(!piecePresent(landingX*75, landingY*75)){
+                    validMove = true;
+
+                }else{
+                    validMove = false;
+                }
+            }
+            else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==1))){
+                if (piecePresent(landingX*75,landingY*75)){
+                    if(checkBlackOponent(landingX*75,landingY*75)==true){
+                        if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                            JOptionPane.showMessageDialog( null, "Black Wins!" );
+                        }
+                        validMove = true;
+                    }
+                    else{
+                        validMove =false;
+                    }
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==1))){
+            if (piecePresent(landingX*75,landingY*75)){
+                if(checkBlackOponent(landingX*75,landingY*75)){
+                    if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                        JOptionPane.showMessageDialog( null, "Black Wins!" );
+                    }
+                    validMove = true;
+                    if(landingY==0){
+                        progression = true;
+                    }
+                }
+                else{
+                    validMove =false;
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        else{
+            if((startX == landingX)&&(((startY - landingY)==1))){
+                if(!piecePresent(landingX*75, landingY*75)){
+                    validMove = true;
+                    if(landingY==0){
+                        progression = true;
+                    }
+                }
+                else{
+                    validMove = false;
+                }
+            }
+            else{
+                validMove = false;
+            }
+        }
+        return validMove;
+    }
+    //Queen Code
+    public boolean moveQueen(){
         if(Math.abs(startX-landingX)!=0 && Math.abs(startY-landingY)==0||
                 Math.abs(startX-landingX)==0 && Math.abs(startY-landingY)!=0||
-                    Math.abs(startX-landingX)==Math.abs(startY-landingY)){
+                Math.abs(startX-landingX)==Math.abs(startY-landingY)){
             if ((startX-landingX)<0&&(startY-landingY)<0){
                 for(int i= 0; i<xMovement;i++){
                     if(piecePresent(((startX+i)*75),((startY+i)*75))){
@@ -478,9 +639,12 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
                 validMove=false;
             }
             else if(InTheWay==false){
-                if(piecePresent(e.getX(),e.getY())){
+                if(piecePresent(landingX*75,landingY*75)){
                     if(pieceName.contains("White")){
-                        if(checkWhiteOponent(e.getX(),e.getY())){
+                        if(checkWhiteOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
                             validMove=true;
                         }
                         else{
@@ -488,7 +652,10 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
                         }
                     }
                     else if(pieceName.contains("Black")){
-                        if(checkBlackOponent(e.getX(),e.getY())){
+                        if(checkBlackOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
                             validMove=true;
                         }
                         else{
@@ -504,160 +671,503 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
         else{
             validMove=false;
         }
+        return validMove;
     }
-    //end Queen both colors
-
-    else if(pieceName.equals("BlackPawn")){
-      if(startY ==6){
-        if((startX == landingX)&&(((startY - landingY)==1)||(startY - landingY)==2)){
-          if(!piecePresent(e.getX(), e.getY())){
-            validMove = true;
-
-          }else{
-            validMove = false;
-          }
+    //King Code
+    public boolean moveKing(){
+        if(((landingX<0)||(landingX>7)||(landingY<0)||(landingY>7))){
+            validMove=false;
         }
-        else{
-          validMove = false;
-        }
-      }
-      else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==1))){
-        if (piecePresent(e.getX(),e.getY())){
-          if(checkBlackOponent(e.getX(),e.getY())){
-            validMove = true;
-            if(landingY==0){
-              progression = true;
+        else if(Math.abs(startX - landingX) <= 1 && Math.abs(startY - landingY) <= 1) {
+            //White King
+            if (pieceName.contains("White")) {
+                if ((landingX==0&&landingY==0)||(landingX==0&&landingY==7)||(landingX==7&&landingY==0)||(landingX==7&&landingY==7)){
+                    if (piecePresent(landingX*75, landingY*75)){
+                        if(checkWhiteOponent(landingX*75, landingY*75)){
+                            validMove=true;
+                        }else{
+                            validMove=false;
+                        }
+                    }
+                    else{
+                        validMove=true;
+                    }
+                }
+                else if(landingX > 0&&landingX <7 && landingY >0&& landingY<7) {
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if(landingY==0&&landingX!=0||landingY==0&&landingX!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    }
+                    else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if(landingY==7&&landingX!=0||landingY==7&&landingX!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }
+                    else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if (landingX==0&&landingY!=0&&landingX==0&&landingY!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if (landingX==7&&landingY!=0&&landingX==7&&landingY!=7){
+                    if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                //issue with corners
+                else if ((landingX==0&&landingY==0)||(landingX==0&&landingY==7)||(landingX==7&&landingY==0)||(landingX==7&&landingY==7)){
+                    if (piecePresent(landingX*75, landingY*75)){
+                        if(checkWhiteOponent(landingX*75, landingY*75)){
+                            validMove=true;
+                        }else{
+                            validMove=false;
+                        }
+                    }
+                    else{
+                        validMove=true;
+                    }
+                }
             }
-          }
-          else{
-            validMove =false;
-          }
-        }
-        else{
-          validMove = false;
-        }
-      }
-      else{
-        if((startX == landingX)&&(((startY - landingY)==1))){
-          if(!piecePresent(e.getX(), e.getY())){
-            validMove = true;
-          }
-          else{
-            validMove = false;
-
-          }
-        }
-        else{
-          validMove = false;
-        }
-      }
-    }
-//end pawn black
-
-    else if(pieceName.equals("WhitePawn")){
-      if(startY ==1){
-        if((startX == landingX)&&(((startY - landingY)==-1)||(startY - landingY)==-2)){
-          if(!piecePresent(e.getX(), e.getY())){
-            validMove = true;
-
-          }else{
-            validMove = false;
-          }
-        }
-        else{
-          validMove = false;
-        }
-      }
-      else if((Math.abs(startX-landingX)==1)&&(((startY-landingY)==-1))){
-        if (piecePresent(e.getX(),e.getY())){
-          if(checkWhiteOponent(e.getX(),e.getY())==true){
-            validMove = true;
-            if(landingY==7){
-              success = true;
+            else if (pieceName.contains("Black")) {
+                if (landingX==0&&landingY==0||landingX==0&&landingY==7||landingX==7&&landingY==0||landingX==7&&landingY==7){
+                    if (piecePresent(landingX*75, landingY*75)){
+                        if(checkBlackOponent(landingX*75, landingY*75)){
+                            validMove=true;
+                        }else{
+                            validMove=false;
+                        }
+                    }
+                    else{
+                        validMove=true;
+                    }
+                }
+                else if(landingX > 0&&landingX <7 && landingY >0&& landingY<7) {
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkBlackOponent(landingX*75, landingY*75)) {
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if(landingY==0&&landingX!=0||landingY==0&&landingX!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    }
+                    else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkWhiteOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if(landingY==7&&landingX!=0||landingY==7&&landingX!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }
+                    else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkBlackOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if (landingX==0&&landingY!=0&&landingX==0&&landingY!=7){
+                    if (piecePresent(landingX*75 + 75, landingY*75) && kingCheckKing(landingX*75 + 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 + 75) && kingCheckKing(landingX*75 + 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 + 75, landingY*75 - 75) && kingCheckKing(landingX*75 + 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkBlackOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
+                else if (landingX==7&&landingY!=0&&landingX==7&&landingY!=7){
+                    if (piecePresent(landingX*75 - 75, landingY*75) && kingCheckKing(landingX*75 - 75, landingY*75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 + 75) && kingCheckKing(landingX*75 - 75, landingY*75 + 75)) {
+                        validMove = false;
+                    } else if (piecePresent(landingX*75 - 75, landingY*75 - 75) && kingCheckKing(landingX*75 - 75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 + 75) && kingCheckKing(landingX*75, landingY*75 + 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75 - 75) && kingCheckKing(landingX*75, landingY*75 - 75)) {
+                        validMove = false;
+                    }else if (piecePresent(landingX*75, landingY*75)) {
+                        if (checkBlackOponent(landingX*75, landingY*75)) {
+                            validMove = true;
+                        } else {
+                            validMove = false;
+                        }
+                    } else {
+                        validMove = true;
+                    }
+                }
             }
-          }
-          else{
-            validMove =false;
-          }
         }
         else{
-          validMove = false;
-        }
-      }
-      else{
-        if((startX == landingX)&&(((startY - landingY)==-1))){
-          if(!piecePresent(e.getX(), e.getY())){
-            validMove = true;
-          }
-          else{
             validMove = false;
-
-          }
+        }
+        return validMove;
+    }
+    //Rook Code
+    public boolean moveRook(){
+        if(Math.abs(startX-landingX)!=0 && Math.abs(startY-landingY)==0||
+                Math.abs(startX-landingX)==0 && Math.abs(startY-landingY)!=0){
+            if(Math.abs(startX-landingX)!=0){
+                if(startX-landingX>0){
+                    for (int i =0;i<Math.abs(landingX-startX);i++){
+                        if(piecePresent((startX-i)*75,(startY)*75)){
+                            InTheWay = true;
+                        }
+                    }
+                }
+                else if(startX-landingX<0){
+                    for (int i =0;i<Math.abs(landingX-startX);i++){
+                        if(piecePresent((startX+i)*75,(startY)*75)){
+                            InTheWay = true;
+                        }
+                    }
+                }
+            }
+            else if (Math.abs(startY-landingY)!=0){
+                if(startY-landingY>0){
+                    for (int i =0;i<Math.abs(landingY-startY);i++){
+                        if(piecePresent((startX)*75,(startY-i)*75)){
+                            InTheWay = true;
+                        }
+                    }
+                }
+                else if(startY-landingY<0){
+                    for (int i =0;i<Math.abs(landingY-startY);i++){
+                        if(piecePresent((startX)*75,(startY+i)*75)){
+                            InTheWay = true;
+                        }
+                    }
+                }
+            }
+            if(InTheWay==true){
+                validMove = false;
+            }
+            else if (InTheWay==false){
+                if(piecePresent(landingX*75,landingY*75)){
+                    if (pieceName.contains("White")){
+                        if(checkWhiteOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
+                            validMove = true;
+                        }
+                        else{
+                            validMove = false;
+                        }
+                    }
+                    else if (pieceName.contains("Black")){
+                        if(checkBlackOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
+                            validMove = true;
+                        }
+                        else{
+                            validMove = false;
+                        }
+                    }
+                }
+                else{
+                    validMove = true;
+                }
+            }
         }
         else{
-          validMove = false;
+            validMove = false;
         }
-      }
+        return validMove;
     }
-
-//end of White pawn Movement
-
-    if(!validMove){
-			int location=0;
-			if(startY ==0){
-				location = startX;
-			}
-			else{
-				location  = (startY*8)+startX;
-			}
-			String pieceLocation = pieceName+".png";
-			pieces = new JLabel( new ImageIcon(pieceLocation) );
-			panels = (JPanel)chessBoard.getComponent(location);
-		    panels.add(pieces);
-		}
-		else{
-      if(progression){
-        int location = 0 + (e.getX()/75);
-        if (c instanceof JLabel){
-          Container parent = c.getParent();
-          parent.remove(0);
-          pieces = new JLabel(new ImageIcon("BlackQueen.png"));
-          parent = (JPanel)chessBoard.getComponent(location);
-          parent.add(pieces);
+    //Kight Code
+    public boolean moveKnight(){
+        if(startX +2==landingX||startX -2==landingX){
+            if(startY +1==landingY||startY -1==landingY){
+                if(!piecePresent(landingX*75,landingY*75)){
+                    validMove= true;
+                }
+                else if(piecePresent(landingX*75,landingY*75)){
+                    if(pieceName.contains("White")){
+                        if(checkWhiteOponent(landingX*75,landingY*75)==true){
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
+                            validMove = true;
+                        }
+                        else{
+                            validMove = false;
+                        }
+                    }
+                    if(pieceName.contains("Black")){
+                        if(checkBlackOponent(landingX*75,landingY*75)==true){
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
+                            validMove = true;
+                        }else{
+                            validMove = false;
+                        }
+                    }
+                }
+            }
         }
-      }
-
-			else if(success){
-				int location = 56 + landingX;
-				if (c instanceof JLabel){
-	            	Container parent = c.getParent();
-	            	parent.remove(0);
-					pieces = new JLabel( new ImageIcon("WhiteQueen.png") );
-					parent = (JPanel)chessBoard.getComponent(location);
-			    	parent.add(pieces);
-				}
-				else{
-					Container parent = (Container)c;
-	            	pieces = new JLabel( new ImageIcon("WhiteQueen.png") );
-					parent = (JPanel)chessBoard.getComponent(location);
-			    	parent.add(pieces);
-				}
-			}
-			else{
-				if (c instanceof JLabel){
-	            	Container parent = c.getParent();
-	            	parent.remove(0);
-	            	parent.add( chessPiece );
-	        	}
-	        	else {
-	            	Container parent = (Container)c;
-	            	parent.add( chessPiece );
-	        	}
-	    		chessPiece.setVisible(true);
-			   }
-		   }
-     }
-
+        else if(startY +2==landingY||startY -2==landingY){
+            if(startX +1==landingX||startX -1==landingX){
+                if(!piecePresent(landingX*75,landingY*75)){
+                    validMove= true;
+                }
+                else if(piecePresent(landingX*75,landingY*75)){
+                    if(pieceName.contains("White")){
+                        if(checkWhiteOponent(landingX*75,landingY*75)==true){
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
+                            validMove = true;
+                        }else{
+                            validMove = false;
+                        }
+                    }
+                    if(pieceName.contains("Black")){
+                        if(checkBlackOponent(landingX*75,landingY*75)==true){
+                            validMove = true;
+                        }else{
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
+                            validMove = false;
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            validMove= false;
+        }
+        return validMove;
+    }
+    //Bishop Code
+    public boolean moveBishop(){
+        if((Math.abs(startX-landingX))==(Math.abs(startY-landingY))){
+            if ((startX-landingX)<0&&(startY-landingY)<0){
+                for(int i= 0; i<xMovement;i++){
+                    if(piecePresent(((startX+i)*75),((startY+i)*75))){
+                        InTheWay = true;
+                    }
+                }
+            }
+            else if ((startX-landingX)<0&&(startY-landingY)>0){
+                for(int i= 0; i<xMovement;i++){
+                    if(piecePresent(((startX+i)*75),((startY-i)*75))){
+                        InTheWay = true;
+                    }
+                }
+            }
+            else if ((startX-landingX)>0&&(startY-landingY)>0){
+                for(int i= 0; i<xMovement;i++){
+                    if(piecePresent(((startX-i)*75),((startY-i)*75))){
+                        InTheWay = true;
+                    }
+                }
+            }
+            else if ((startX-landingX)>0&&(startY-landingY)<0){
+                for(int i= 0; i<xMovement;i++){
+                    if(piecePresent(((startX-i)*75),((startY+i)*75))){
+                        InTheWay = true;
+                    }
+                }
+            }
+            if (InTheWay==true){
+                validMove=false;
+            }
+            else if (InTheWay==false){
+                if(piecePresent(landingX*75,landingY*75)){
+                    if(pieceName.contains("White")){
+                        if(checkWhiteOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&BlackKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "White Wins!" );
+                            }
+                            validMove=true;
+                        }
+                        else{
+                            validMove=false;
+                        }
+                    }
+                    else if(pieceName.contains("Black")){
+                        if(checkBlackOponent(landingX*75,landingY*75)){
+                            if(piecePresent(landingX*75,landingY*75)&&WhiteKing(landingX*75,landingY*75)){
+                                JOptionPane.showMessageDialog( null, "Black Wins!" );
+                            }
+                            validMove=true;
+                        }
+                        else{
+                            validMove=false;
+                        }
+                    }
+                }
+                else{
+                    validMove=true;
+                }
+            }
+        }
+        else{
+            validMove=true;
+        }
+        return validMove;
+    }
 
     public void mouseClicked(MouseEvent e) {
 
@@ -682,4 +1192,14 @@ public class ChessProject extends JFrame implements MouseListener, MouseMotionLi
         frame.setLocationRelativeTo( null );
         frame.setVisible(true);
      }
+
+    /*//setMethods
+    public void setlandingX(int landingX){
+        this.landingX = landingX;
+    }
+     //get methods
+    public boolean getValidmove(){
+        return validMove;
+    }*/
   }
+

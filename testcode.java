@@ -103,3 +103,72 @@ else if (pieceName.contains("Rook")){
           }
         }
   	}
+// King
+		else if(pieceName.contains("King")){
+		if (Math.abs(startX - landingX) <= 1 && Math.abs(startY - landingY) <= 1) {
+		if(piecePresent(e.getX()+75,e.getY())){
+		if(kingCheckKing(e.getX()+75,e.getY())){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX()-75,e.getY())){
+		if(kingCheckKing(e.getX()-75,e.getY())){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX(),e.getY()+75)){
+		if(kingCheckKing(e.getX(),e.getY()+75)){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX(),e.getY()-75)){
+		if(kingCheckKing(e.getX(),e.getY()-75)){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX()+75,e.getY()+75)){
+		if(kingCheckKing(e.getX()+75,e.getY()+75)){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX()-75,e.getY()-75)){
+		if(kingCheckKing(e.getX()-75,e.getY()-75)){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX()+75,e.getY()-75)){
+		if(kingCheckKing(e.getX()+75,e.getY()-75)){
+		validMove = false;
+		}
+		}
+		else if(piecePresent(e.getX()-75,e.getY()+75)){
+		if(kingCheckKing(e.getX()-75,e.getY()+75)){
+		validMove = false;
+		}
+		}
+		else if {
+
+		if (piecePresent(landingX * 75, landingY * 75)) {
+		if (pieceName.contains("White")) {
+		if (checkWhiteOponent(e.getX(), e.getY())) {
+		validMove = true;
+		} else {
+		validMove = false;
+		}
+		} else if (pieceName.contains("Black")) {
+		if (checkBlackOponent(e.getX(), e.getY())) {
+		validMove = true;
+		} else {
+		validMove = false;
+		}
+		}
+		}
+		else {
+		validMove = true;
+		}
+		}
+		}
+		else {
+		validMove = false;
+		}
+		}
